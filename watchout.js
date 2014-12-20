@@ -21,14 +21,15 @@
 var gameOptions = {
   width: 500,
   height: 500,
-  numEnemies: 1,
+  numEnemies: 20,
   enemyRadius: 10,
   playerRadius: 20
 };
 
 var gameStats = {
   score: 0,
-  highScore: 0
+  highScore: 0,
+  collisions: 0
 }
 
 
@@ -38,10 +39,14 @@ var svg = d3.select('body').append('svg')
           .attr('height', gameOptions.height)
           .attr('class', 'board');
 
+var updateScore = function(){
+  gameStats.score = 0;
+  gameStats.collisions++;
+};
 
+var updateScore_throttled = _.throttle(updateScore, 1000, {trailing:false});
 
 var checkCollision = function(x,y) {
-  // note: datum() might not be correct...
   //console.log('x', x,'y',y)
   var playerX = d3.selectAll('.player').datum().cx;
   var playerY = d3.selectAll('.player').datum().cy;
@@ -49,6 +54,7 @@ var checkCollision = function(x,y) {
   var distance = Math.sqrt( Math.pow(x - playerX,2)+Math.pow(y - playerY,2));
   if (distance < gameOptions.enemyRadius + gameOptions.playerRadius){
     //update scoreboard
+    updateScore_throttled();
   }
 };
 
@@ -70,20 +76,11 @@ var dragMove = function(){
   var y = d3.event.y;
   d3.select('.player').data([{cx: x, cy:y, r: gameOptions.playerRadius}])
     .attr('cx', x).attr('cy', y);
-  //attach a on drag click handler that calls our drag move function
 }
 
-var drag = d3.behavior.drag().on("drag", dragMove);
 //define drag behavior
+var drag = d3.behavior.drag().on("drag", dragMove);
 
-
-//define a function that updates the x,y position of our player
-
-
-
-// d3.selectAll('.player').on('click', function(){
-//   console.log(d3.event);
-// });
 
 d3.select('svg').selectAll('.enemy').data(getEnemies())
   .enter().append('circle').attr('class', 'enemy')
@@ -108,31 +105,27 @@ setInterval(function(){
     .attr('r', function(d){return d.r});
 }, 1000);
 
+// this will check for collisions, and
 setInterval(function(){
   d3.selectAll('.enemy')
   .attr('', function(d){checkCollision(d3.select(this).attr('cx'), d3.select(this).attr('cy'))});
+
+  //updates score
+  gameStats.score += 1;
+
+  if ( gameStats.highScore < gameStats.score ) {
+    gameStats.highScore = gameStats.score
+  }
+
+  // updates the score span
+  d3.selectAll('.current').selectAll('span').text(""+ Math.floor(gameStats.score/20));
+  d3.selectAll('.high').selectAll('span').text(""+ Math.floor(gameStats.highScore/20));
+  d3.selectAll('.collisions').selectAll('span').text(""+ gameStats.collisions);
+
+
+
 },1);
 
-
-// collision detection??
-    // .transition().duration(1000).tween('checkCollision', function (data){
-
-    //   return function(t){
-    //     //console.log(distance(data.cx * t,data.cy * t));
-    //     // We might need to interpolate the x,y position of the enemy, instead of actually retrieving it
-    //     if (distance(data.cx,data.cy) < (50)){
-
-    //     console.log('collision');
-    //       //call updateScoreBoard
-    //     }
-    //   }
-    // })
-  //
-  //
-  //
-
-// calcalate distance between player and the enemy
-// data obj will be the data object for each enemy that will be passed to the function
 
 
 
