@@ -21,7 +21,7 @@
 var gameOptions = {
   width: 500,
   height: 500,
-  numEnemies: 15,
+  numEnemies: 1,
   enemyRadius: 10,
   playerRadius: 20
 };
@@ -40,12 +40,16 @@ var svg = d3.select('body').append('svg')
 
 
 
-var distance = function(enemyObj) {
+var checkCollision = function(x,y) {
   // note: datum() might not be correct...
+  //console.log('x', x,'y',y)
   var playerX = d3.selectAll('.player').datum().cx;
   var playerY = d3.selectAll('.player').datum().cy;
   // console.log('x:',playerX,'y:',playerY);
-  return Math.sqrt( Math.pow(enemyObj.cx - playerX,2)+Math.pow(enemyObj.cy - playerY,2));
+  var distance = Math.sqrt( Math.pow(x - playerX,2)+Math.pow(y - playerY,2));
+  if (distance < gameOptions.enemyRadius + gameOptions.playerRadius){
+    //update scoreboard
+  }
 };
 
 var getEnemies = function() {
@@ -88,7 +92,8 @@ d3.select('svg').selectAll('.enemy').data(getEnemies())
   .attr('r', function(d){return d.r});
 
 //why is the location of this code affecting the drag behavoir???
-svg.selectAll('.player').data([{cx: gameOptions.width / 2, cy:gameOptions.height / 2, r: gameOptions.playerRadius}]).enter().append('circle')
+svg.selectAll('.player').data([{cx: gameOptions.width / 2, cy:gameOptions.height / 2, r: gameOptions.playerRadius}])
+  .enter().append('circle')
   .attr('class', 'player')
   .attr('cx', function(d){return d.cx})
   .attr('cy', function(d){return d.cy})
@@ -97,25 +102,31 @@ svg.selectAll('.player').data([{cx: gameOptions.width / 2, cy:gameOptions.height
 
 setInterval(function(){
   d3.select('svg').selectAll('.enemy').data(getEnemies())
-    .transition().duration(1000).tween('checkCollision', function (data){
-
-      return function(t){
-        console.log(t);
-        // We might need to interpolate the x,y position of the enemy, instead of actually retrieving it
-        if (distance(data) < (15)){
-          debugger;
-        console.log('collision');
-          //call updateScoreBoard
-        }
-      }
-    })
+    .transition().duration(1000)
     .attr('cx', function(d){return d.cx})
     .attr('cy', function(d){return d.cy})
     .attr('r', function(d){return d.r});
 }, 1000);
 
+setInterval(function(){
+  d3.selectAll('.enemy')
+  .attr('', function(d){checkCollision(d3.select(this).attr('cx'), d3.select(this).attr('cy'))});
+},1);
+
 
 // collision detection??
+    // .transition().duration(1000).tween('checkCollision', function (data){
+
+    //   return function(t){
+    //     //console.log(distance(data.cx * t,data.cy * t));
+    //     // We might need to interpolate the x,y position of the enemy, instead of actually retrieving it
+    //     if (distance(data.cx,data.cy) < (50)){
+
+    //     console.log('collision');
+    //       //call updateScoreBoard
+    //     }
+    //   }
+    // })
   //
   //
   //
